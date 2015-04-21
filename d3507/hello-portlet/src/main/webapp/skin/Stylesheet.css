@@ -1,0 +1,11 @@
+.ContactTable {
+	border-collapse: separate;
+}
+.ContactTable tr:first-child {
+	font-weight: bold;
+	background: lightgray;
+}
+.ContactTable td {
+	border-width: 1px;
+	border-style: outset;
+}
