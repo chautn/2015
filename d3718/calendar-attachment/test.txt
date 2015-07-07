@@ -1,0 +1,7 @@
+This is a standalone Java client to test /v1/calendar (createAttachmentForEvent).
+The tested method is POST /v1/calendar/events/{id}/attachment.
+It attachs files (sent by the client) to an event. You have to create the event (and find the id) by yourself.
+1. cd calendar-attachment
+2. mvn clean install
+3. java -jar target/calendar-attachment.jar username password event_id file1 file2 fileN
+Example: java -jar target/calendar-attachment.jar root gtn Event66f405597f00010125d71a20dd1dc8b4 file1 file2
