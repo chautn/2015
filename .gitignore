@@ -1,8 +1,23 @@
-target/
-pom.xml.tag
-pom.xml.releaseBackup
+*.class
+
+# Package Files #
+*.jar
+*.war
+*.ear
+# Others #
+.settings
+.project
+.classpath
+.idea
+*.iml
+*.ipr
+*.iws
+temp
+bin
+target
 pom.xml.versionsBackup
-pom.xml.next
-release.properties
-dependency-reduced-pom.xml
-buildNumber.properties
+.svn
+pom.xml~
+*~
+.DS_Store
+transaction.log
