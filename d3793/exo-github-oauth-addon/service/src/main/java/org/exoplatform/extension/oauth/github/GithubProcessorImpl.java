@@ -37,6 +37,8 @@ import org.gatein.security.oauth.exception.OAuthException;
 import org.gatein.security.oauth.exception.OAuthExceptionCode;
 import org.gatein.security.oauth.spi.InteractionState;
 import org.gatein.security.oauth.spi.OAuthCodec;
+import org.gatein.security.oauth.spi.OAuthPrincipal;
+import org.gatein.security.oauth.spi.OAuthProviderType;
 import org.gatein.security.oauth.utils.HttpResponseContext;
 import org.gatein.security.oauth.utils.OAuthPersistenceUtils;
 import org.gatein.security.oauth.utils.OAuthUtils;
@@ -54,6 +56,9 @@ public class GithubProcessorImpl implements GithubProcessor {
   public static final String PROFILE_ENDPOINT_URL = "https://api.github.com/user";
   
   public static final String PROFILE_GITHUB_ACCESS_TOKEN = "user.social-info.github.accessToken";
+  public static final String USERNAME_JSON_KEY = "login";
+  public static final String DISPLAYNAME_JSON_KEY = "name";
+  public static final String EMAIL_JSON_KEY = "email";
 
   private static final Log LOG = ExoLogger.getLogger(GithubProcessorImpl.class);
 
@@ -181,7 +186,7 @@ public class GithubProcessorImpl implements GithubProcessor {
     
       HttpResponseContext responseContext = OAuthUtils.readUrlContent(connection);
       if (responseContext.getResponseCode() == 200) {
-        return getAccessToken(responseContext.getResponse());
+        return parseAccessToken(responseContext.getResponse());
       } else if (responseContext.getResponseCode() == 400) {
         throw new OAuthException(OAuthExceptionCode.ACCESS_TOKEN_ERROR, responseContext.getResponse());
       } else {
@@ -200,9 +205,43 @@ public class GithubProcessorImpl implements GithubProcessor {
     //
   }
   
-  public String getAccessToken(String httpResponse) throws JSONException {
+  public String parseAccessToken(String httpResponse) throws JSONException {
     JSONObject jsonObject = new JSONObject(httpResponse);
     return jsonObject.getString(OAuthConstants.ACCESS_TOKEN_PARAMETER);
+  }
+  
+  public OAuthPrincipal<GithubAccessTokenContext> getPrincipal(GithubAccessTokenContext accessTokenContext, OAuthProviderType<GithubAccessTokenContext> providerType) {
+    String accessToken = accessTokenContext.getAccessToken();
+    Map<String, String> params = new HashMap<String, String>();
+    params.put(OAuthConstants.ACCESS_TOKEN_PARAMETER, accessToken);
+    String location = new StringBuilder(PROFILE_ENDPOINT_URL).append("?").append(OAuthUtils.createQueryString(params)).toString();
+    try {
+      URL url = new URL(location);
+      HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+      HttpResponseContext responseContext = OAuthUtils.readUrlContent(connection);
+      if (responseContext.getResponseCode() == 200) {
+        return parsePrincipal(responseContext.getResponse(), accessTokenContext, providerType);
+      } else {
+        String errorMessage = "Unspecified IO error. Http response code: " + responseContext.getResponseCode() + ", details: " + responseContext.getResponse();
+        throw new OAuthException(OAuthExceptionCode.IO_ERROR, errorMessage);
+      }
+    } catch (JSONException e) {
+      throw new OAuthException(OAuthExceptionCode.IO_ERROR, e);
+    } catch (IOException e) {
+      throw new OAuthException(OAuthExceptionCode.IO_ERROR, e);
+    }
+  }
+  
+  public OAuthPrincipal<GithubAccessTokenContext> parsePrincipal(String response, GithubAccessTokenContext accessTokenContext,
+                                                                 OAuthProviderType<GithubAccessTokenContext> providerType) throws JSONException {
+    JSONObject jsonObject = new JSONObject(response);
+    String userName = jsonObject.getString(USERNAME_JSON_KEY);
+    String displayName = jsonObject.getString(DISPLAYNAME_JSON_KEY);
+    String firstName = displayName; //Github profile doesn't contain first and last name.
+    String lastName = "";
+    String email = jsonObject.getString(EMAIL_JSON_KEY);
+    
+    return new OAuthPrincipal<GithubAccessTokenContext>(userName, firstName, lastName, displayName, email, accessTokenContext, providerType);
   }
 
 }

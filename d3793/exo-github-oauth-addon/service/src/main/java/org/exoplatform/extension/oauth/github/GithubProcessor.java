@@ -16,7 +16,9 @@
  */
 package org.exoplatform.extension.oauth.github;
 
+import org.gatein.security.oauth.spi.OAuthPrincipal;
 import org.gatein.security.oauth.spi.OAuthProviderProcessor;
+import org.gatein.security.oauth.spi.OAuthProviderType;
 
 /**
  * Created by The eXo Platform SAS
@@ -25,5 +27,8 @@ import org.gatein.security.oauth.spi.OAuthProviderProcessor;
  * Nov 10, 2015  
  */
 public interface GithubProcessor extends OAuthProviderProcessor<GithubAccessTokenContext> {
+  
+  public OAuthPrincipal<GithubAccessTokenContext> getPrincipal(GithubAccessTokenContext accessTokenContext, 
+                                                               OAuthProviderType<GithubAccessTokenContext> providerType);
 
 }
