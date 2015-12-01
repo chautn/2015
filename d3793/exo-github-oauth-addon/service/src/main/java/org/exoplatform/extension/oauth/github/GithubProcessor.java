@@ -27,7 +27,9 @@ import org.gatein.security.oauth.spi.OAuthProviderType;
  * Nov 10, 2015  
  */
 public interface GithubProcessor extends OAuthProviderProcessor<GithubAccessTokenContext> {
-  
+
+  //TODO: this method should be implement in GithubFilter
+  @Deprecated
   public OAuthPrincipal<GithubAccessTokenContext> getPrincipal(GithubAccessTokenContext accessTokenContext, 
                                                                OAuthProviderType<GithubAccessTokenContext> providerType);
 

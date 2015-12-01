@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+import org.exoplatform.commons.utils.PropertyManager;
 import org.exoplatform.container.ExoContainerContext;
 import org.exoplatform.container.xml.InitParams;
 import org.exoplatform.services.log.ExoLogger;
@@ -70,6 +71,11 @@ public class GithubProcessorImpl implements GithubProcessor {
 
   public GithubProcessorImpl(ExoContainerContext context, InitParams params, SecureRandomService secureRandomService) {
     String redirectURL_ = params.getValueParam("redirectURL").getValue();
+    if (redirectURL_ != null) {
+      redirectURL_ = redirectURL_.replaceAll("@@portal.container.name@@", context.getName());
+    } else {
+      redirectURL_ = PropertyManager.getProperty("exo.base.url") + "/" + context.getName() + "/githubAuth";
+    }
     String clientID_ = params.getValueParam("clientId").getValue();
     String clientSecret_ = params.getValueParam("clientSecret").getValue();
     if (redirectURL_ == null || redirectURL_.length() == 0 || clientID_ == null
@@ -102,6 +108,9 @@ public class GithubProcessorImpl implements GithubProcessor {
     // get access token
     if (state.equals(InteractionState.State.AUTH.name())) {
       //
+      String accessToken = getAccessToken(request, response);
+      GithubAccessTokenContext tokenContext = new GithubAccessTokenContext(accessToken);
+      return new InteractionState<GithubAccessTokenContext>(InteractionState.State.FINISH, tokenContext);
     }
     return new InteractionState<GithubAccessTokenContext>(InteractionState.State.valueOf(state), null);
   }
@@ -152,13 +161,13 @@ public class GithubProcessorImpl implements GithubProcessor {
     Map<String, String> params = new HashMap<String, String>();
     params.put(OAuthConstants.REDIRECT_URI_PARAMETER, redirectURL);
     params.put(OAuthConstants.CLIENT_ID_PARAMETER, clientID);
-    params.put(OAuthConstants.ATTRIBUTE_VERIFICATION_STATE, verificationState);
+    params.put(OAuthConstants.STATE_PARAMETER, verificationState);
     
     String location = new StringBuilder(AUTHENTICATION_ENDPOINT_URL).append("?").append(OAuthUtils.createQueryString(params)).toString();
     response.sendRedirect(location);
   }
   
-  public String getAccessToken(HttpServletRequest request, HttpServletResponse response, String verificationState) {
+  public String getAccessToken(HttpServletRequest request, HttpServletResponse response) {
     String authorizationCode = request.getParameter(OAuthConstants.CODE_PARAMETER);
     if (authorizationCode == null) {
       LOG.error("Authorization code not found!");
@@ -174,7 +183,7 @@ public class GithubProcessorImpl implements GithubProcessor {
     Map<String, String> params = new HashMap<String, String>();
     params.put(OAuthConstants.REDIRECT_URI_PARAMETER, redirectURL);
     params.put(OAuthConstants.CLIENT_ID_PARAMETER, clientID);
-    params.put(OAuthConstants.ATTRIBUTE_VERIFICATION_STATE, verificationState);
+    params.put(OAuthConstants.STATE_PARAMETER, requestVerificationState);
     params.put(OAuthConstants.CLIENT_SECRET_PARAMETER, clientSecret);
     params.put(OAuthConstants.CODE_PARAMETER, authorizationCode);
     
@@ -183,6 +192,7 @@ public class GithubProcessorImpl implements GithubProcessor {
       URL url = new URL(location);
       HttpURLConnection connection = (HttpURLConnection) url.openConnection();
       connection.setRequestMethod("POST"); //Github specifies the method
+      connection.setRequestProperty("Accept", "application/json");
     
       HttpResponseContext responseContext = OAuthUtils.readUrlContent(connection);
       if (responseContext.getResponseCode() == 200) {
@@ -209,7 +219,8 @@ public class GithubProcessorImpl implements GithubProcessor {
     JSONObject jsonObject = new JSONObject(httpResponse);
     return jsonObject.getString(OAuthConstants.ACCESS_TOKEN_PARAMETER);
   }
-  
+
+  @Deprecated
   public OAuthPrincipal<GithubAccessTokenContext> getPrincipal(GithubAccessTokenContext accessTokenContext, OAuthProviderType<GithubAccessTokenContext> providerType) {
     String accessToken = accessTokenContext.getAccessToken();
     Map<String, String> params = new HashMap<String, String>();
@@ -231,7 +242,8 @@ public class GithubProcessorImpl implements GithubProcessor {
       throw new OAuthException(OAuthExceptionCode.IO_ERROR, e);
     }
   }
-  
+
+  @Deprecated
   public OAuthPrincipal<GithubAccessTokenContext> parsePrincipal(String response, GithubAccessTokenContext accessTokenContext,
                                                                  OAuthProviderType<GithubAccessTokenContext> providerType) throws JSONException {
     JSONObject jsonObject = new JSONObject(response);
