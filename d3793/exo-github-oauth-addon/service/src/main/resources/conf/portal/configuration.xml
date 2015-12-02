@@ -7,24 +7,24 @@
 		<init-params>
 			<value-param>
 				<name>clientId</name>
-				<value>${gatein.oauth.github.clientId}</value>
+				<value>${exo.oauth.github.clientId}</value>
 			</value-param>
 			<value-param>
 				<name>clientSecret</name>
-				<value>${gatein.oauth.github.clientSecret}</value>
+				<value>${exo.oauth.github.clientSecret}</value>
 			</value-param>
 			<value-param>
 				<name>redirectURL</name>
         <!--
         TODO: Should not expose property for this value.
-        user will have hard configure with this value: ${exo.base.url}/@@portal.container.name@@/githubAuth
+        user will have hard configure with this value: 
         -->
-				<value>${gatein.oauth.github.redirectURL}</value>
+				<value>${exo.base.url:http://localhost:8080}/@@portal.container.name@@/githubAuth</value>
 			</value-param>
 			<!-- The custom scope is not supported so far, so don't edit the below -->
 			<value-param>
 				<name>scope</name>
-				<value>${gatein.oauth.github.scope:user}</value>
+				<value>${exo.oauth.github.scope:user}</value>
 			</value-param>
 		</init-params>
 	</component>
@@ -57,7 +57,7 @@
 				</value-param>
 				<value-param>
 					<name>enabled</name>
-					<value>${gatein.oauth.github.enabled:false}</value>
+					<value>${exo.oauth.github.enabled:false}</value>
 				</value-param>
 				<value-param>
 					<name>filterMapping</name>
@@ -80,7 +80,7 @@
 				</value-param>
 				<value-param>
 					<name>enabled</name>
-					<value>${gatein.oauth.github.enabled}</value>
+					<value>${exo.oauth.github.enabled:false}</value>
 				</value-param>
 				<value-param>
 					<name>userNameAttributeName</name>
@@ -98,6 +98,28 @@
 					<name>friendlyName</name>
 					<value>GitHub</value>
 				</value-param>
+			</init-params>
+		</component-plugin>
+	</external-component-plugins>
+	<external-component-plugins>
+		<target-component>org.exoplatform.services.resources.ResourceBundleService</target-component>
+		<component-plugin>
+			<name>UI Extension</name>
+			<set-method>addResourceBundle</set-method>
+			<type>org.exoplatform.services.resources.impl.BaseResourceBundlePlugin</type>
+			<init-params>
+				<!--<values-param>
+					<name>classpath.resources</name>
+					<value>locale.org.exoplatform.extension.GitHub</value>
+				</values-param>-->
+				<values-param>
+					<name>init.resources</name>
+					<value>locale.org.exoplatform.extension.GitHub</value>
+				</values-param>
+				<values-param>
+					<name>portal.resource.names</name>
+					<value>locale.org.exoplatform.extension.GitHub</value>
+				</values-param>
 			</init-params>
 		</component-plugin>
 	</external-component-plugins>

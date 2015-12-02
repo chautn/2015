@@ -71,11 +71,8 @@ public class GithubProcessorImpl implements GithubProcessor {
 
   public GithubProcessorImpl(ExoContainerContext context, InitParams params, SecureRandomService secureRandomService) {
     String redirectURL_ = params.getValueParam("redirectURL").getValue();
-    if (redirectURL_ != null) {
-      redirectURL_ = redirectURL_.replaceAll("@@portal.container.name@@", context.getName());
-    } else {
-      redirectURL_ = PropertyManager.getProperty("exo.base.url") + "/" + context.getName() + "/githubAuth";
-    }
+    redirectURL_ = redirectURL_.replaceAll("@@portal.container.name@@", context.getName());
+    
     String clientID_ = params.getValueParam("clientId").getValue();
     String clientSecret_ = params.getValueParam("clientSecret").getValue();
     if (redirectURL_ == null || redirectURL_.length() == 0 || clientID_ == null
